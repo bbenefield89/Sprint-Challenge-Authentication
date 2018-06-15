@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { mysecret } = require('../../config');
 const User = require('../models/userModels');
@@ -13,20 +14,33 @@ const login = (req, res) => {
       res.status(422).json({ error: 'No user with that username in our DB' });
       return;
     }
-    user.checkPassword(password, (nonMatch, hashMatch) => {
-      // This is an example of using our User.method from our model.
-      if (nonMatch !== null) {
-        res.status(422).json({ error: 'passwords dont match' });
-        return;
-      }
-      if (hashMatch) {
-        const payload = {
-          username: user.username
-        }; // what will determine our payload.
-        const token = jwt.sign(payload, mysecret); // creates our JWT with a secret and a payload and a hash.
-        res.json({ token }); // sends the token back to the client
-      }
-    });
+    // user.checkPassword(password, (nonMatch, hashMatch) => {
+    //   console.log(hashMatch)
+    //   // This is an example of using our User.method from our model.
+    //   if (nonMatch !== null) {
+    //     res.status(422).json({ error: 'passwords dont match' });
+    //     return;
+    //   }
+    //   if (hashMatch) {
+    //     const payload = {
+    //       username: user.username
+    //     }; // what will determine our payload.
+    //     const token = jwt.sign(payload, mysecret); // creates our JWT with a secret and a payload and a hash.
+    //     res.json({ token }); // sends the token back to the client
+    //   }
+    // });
+
+    bcrypt.compare(password, user.password, (err, bcRes) => {
+      if (err)
+        return res.status(500).json(err);
+
+      if (!bcRes)
+        return res.status(401).json({ err: 'Wrong password' });
+
+      const payload = { username: user.username };
+      const token = jwt.sign(payload, mysecret);
+      return res.json({ token });
+    })
   });
 };
 
