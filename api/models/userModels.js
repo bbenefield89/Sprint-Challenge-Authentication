@@ -17,9 +17,9 @@ UserSchema.pre('save', function(next) {
   // Fill this middleware in with the Proper password encrypting, bcrypt.hash()
   // if there is an error here you'll need to handle it by calling next(err);
   // Once the password is encrypted, call next() so that your userController and create a user
-  return bcrypt.hash(this.password, 10, (err, hash) => {
+  return bcrypt.hash(this.password, SALT_ROUNDS, (err, hash) => {
     if (err)
-      return err;
+      return next(err);
 
     this.password = hash;
     next();
@@ -27,13 +27,9 @@ UserSchema.pre('save', function(next) {
 });
 
 UserSchema.methods.checkPassword = function(plainTextPW, callBack) {
-  return bcrypt.compare(plainTextPW, this.password)
-    .then(bool => {
-      if (bool)
-        return callBack(null, bool);
-
-      return callBack(null, bool);
-    });
+  bcrypt.compare(plainTextPW, this.password, (err, res) => {
+    return callBack(err, res);
+  })
 };
 
 module.exports = mongoose.model('User', UserSchema);

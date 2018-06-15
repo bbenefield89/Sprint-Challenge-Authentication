@@ -17,7 +17,6 @@ const login = (req, res) => {
     }
     
     user.checkPassword(password, (nonMatch, hashMatch) => {
-      console.log(nonMatch, hashMatch)
       if (nonMatch !== null) {
         res.status(422).json({ error: 'passwords dont match' });
         return;
